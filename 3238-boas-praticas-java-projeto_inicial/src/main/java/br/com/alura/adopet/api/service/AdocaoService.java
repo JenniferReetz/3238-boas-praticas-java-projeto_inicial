@@ -39,12 +39,7 @@ public class AdocaoService {
         Tutor tutor = tutorRepository.getReferenceById(dto.idTutor());
         validacoes.forEach(v -> v.validar(dto));
 
-        Adocao adocao = new Adocao();
-        adocao.setData(LocalDateTime.now());
-        adocao.setStatus(StatusAdocao.AGUARDANDO_AVALIACAO);
-        adocao.setPet(pet);
-        adocao.setTutor(tutor);
-        adocao.setMotivo(dto.motivo());
+        Adocao adocao = new Adocao(tutor, pet, dto.motivo());
         repository.save(adocao);
 
        emailService.enviarEmail(adocao.getPet().getAbrigo().getEmail(), "Solicitação de adoção",
@@ -53,7 +48,7 @@ public class AdocaoService {
     }
     public void aprovar (AprovacaoDto dto) {
         Adocao adocao = adocaoRepository.getReferenceById(dto.idAdocao());
-        adocao.setStatus(StatusAdocao.APROVADO);
+        adocao.marcarComoAprovada();
         repository.save(adocao);
 
         emailService.enviarEmail(adocao.getTutor().getEmail(), "Adoção aprovada",
@@ -63,8 +58,7 @@ public class AdocaoService {
     }
     public void reprovar (ReprovacaoDto dto) {
         Adocao adocao = adocaoRepository.getReferenceById(dto.idAdocao());
-        adocao.setStatus(StatusAdocao.REPROVADO);
-        adocao.setJustificativaStatus(dto.justificativa());
+        adocao.marcarComoReprovada(dto.justificativa());
         emailService.enviarEmail(adocao.getPet().getAbrigo().getEmail(),
                 "Solcitação de Adoção" ,
                 "Olá " +adocao.getTutor().getNome() +"!\n\nInfelizmente sua adoção do pet "
